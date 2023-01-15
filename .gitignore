@@ -1,0 +1,7 @@
+# General
+*.pyc
+__pycache__/
+.vscode/
+misc/
+Dataset/*
+out/*
