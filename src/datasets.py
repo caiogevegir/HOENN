@@ -1,10 +1,9 @@
 import numpy
 import os.path
-import pickle
 import matplotlib.pyplot
 
 
-# (FASHION) MNIST ----------------------------------------------------------------------------------
+# MNIST --------------------------------------------------------------------------------------------
 
 class MNIST:
 
@@ -64,68 +63,10 @@ class MNIST:
         matplotlib.pyplot.imshow(sample, cmap="gray")
         matplotlib.pyplot.show()
 
-
-class FashionMNIST(MNIST):
-
-    def __init__(self, flatten=False):
-        super().__init__(flatten)
-
-# CIFAR10 ------------------------------------------------------------------------------------------
-
-class CIFAR10:
-
-    def __init__(self) -> None:
-        self.dataset_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Dataset", self.__class__.__name__)
-        self.data_size = 3072
-        self.num_labels = 10
-        self.train_features = numpy.empty(shape=(1,3072), dtype=numpy.uint8)
-        self.train_labels = []
-        self.validation_features = []
-        self.validation_labels = []
-        self.test_features = []
-        self.test_labels = []
-
-        self.__load_train_dataset()
-        self.__load_test_dataset()
-
-    def __load_train_dataset(self):
-        for i in range(1,6):
-            data_path = os.path.join(self.dataset_path, f"data_batch_{i}")
-            with open(data_path, "rb") as dp:
-                content = pickle.load(dp, encoding="bytes")
-                if i < 5:
-                    self.train_features = numpy.concatenate((self.train_features, content[b"data"]))
-                    self.train_labels += content[b"labels"]
-                else:
-                    # Leave the last batch for validation
-                    self.validation_features = content[b"data"]
-                    self.validation_labels = content[b"labels"]
-        self.train_features = self.train_features[1:]
-        self.train_features = self.__reshape_rgb_array(self.train_features, 40000)
-        self.validation_features = self.__reshape_rgb_array(self.validation_features, 10000)
-
-    def __load_test_dataset(self):
-        data_path = os.path.join(self.dataset_path, "test_batch")
-        with open(data_path, "rb") as dp:
-            content = pickle.load(dp, encoding="bytes")
-            self.test_features = content[b"data"]
-            self.test_labels = content[b"labels"]
-        self.test_features = self.__reshape_rgb_array(self.test_features, 10000)
-
-    @staticmethod
-    def __reshape_rgb_array(array, num_images):
-        return numpy.reshape(array, newshape=(num_images,3,32,32)).transpose(0,2,3,1)
-
-    def sample(self):
-        matplotlib.pyplot.imshow(self.train_features[0])
-        matplotlib.pyplot.show()
-
 # --------------------------------------------------------------------------------------------------
 
 def main():
     dataset = MNIST()
-    # dataset = FashionMNIST()
-    # dataset = CIFAR10()
     dataset.sample()
 
 

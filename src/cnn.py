@@ -1,7 +1,7 @@
 from tensorflow.keras import Sequential, Input
 from tensorflow.keras.layers import Conv2D, AveragePooling2D, Flatten, Dense
 from tensorflow.keras.utils import to_categorical
-from datasets import MNIST, FashionMNIST
+from datasets import MNIST
 import os.path
 import time
 
@@ -41,7 +41,6 @@ class LeNet5(Sequential):
 
 def main():
     dataset = MNIST()
-    dataset = FashionMNIST()
 
     model = LeNet5(optimizer="Adam", loss="categorical_crossentropy")
 

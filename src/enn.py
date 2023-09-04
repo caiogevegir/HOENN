@@ -6,11 +6,9 @@ import numpy
 import os.path
 import matplotlib.pyplot
 import sklearn.metrics
-from scipy.ndimage import gaussian_filter
 import time
-import scipy.stats
 
-from datasets import MNIST, FashionMNIST, CIFAR10
+from datasets import MNIST
 
 # --------------------------------------------------------------------------------------------------
 
@@ -19,7 +17,7 @@ OUTPUT_PATH = os.path.join(ROOT_PATH, "out")
 
 CONFIDENCE_ARRAY = []
 
-matplotlib.pyplot.rcParams["font.size"] = 16
+matplotlib.pyplot.rcParams["font.size"] = 12
 matplotlib.pyplot.rcParams["font.family"] = "Times New Roman"
 
 # --------------------------------------------------------------------------------------------------
@@ -33,9 +31,8 @@ class EmbeddedNN:
         # LOG attenuation
         # self.__model = numpy.log10(self.__model).astype(int)
         # self.__model = numpy.maximum(self.__model, 0)  # Remove underflow and negative results
-        # MEAN attenuation + Gaussian Filter + Dropout
+        # MEAN attenuation + Dropout
         self.__model = (self.__model / 50000).astype(int)
-        # self.__model = gaussian_filter(self.__model, sigma=0.3)
         self.__model = numpy.maximum(self.__model, 3) - 3
 
     def train(self, train_features, train_labels):
@@ -120,24 +117,45 @@ def plot_confusion_matrix(true_labels, predicted_labels):
     matplotlib.pyplot.colorbar()
     matplotlib.pyplot.show()
 
-def plot_cdf(confidence_threshold):
+def plot_cdf():
 
     count, bins_count = numpy.histogram(CONFIDENCE_ARRAY, bins=1000)
     pdf = count / sum(count)
     cdf = numpy.cumsum(pdf)
-    matplotlib.pyplot.plot(bins_count[1:], cdf, label="CDF")
-    matplotlib.pyplot.axvline(x=confidence_threshold, color="r", label="Limiar de Confiança")
-    matplotlib.pyplot.xlabel("Confiança na Inferência")
-    matplotlib.pyplot.ylabel("F(x)")
-    matplotlib.pyplot.legend()
+
+    fig, ax = matplotlib.pyplot.subplots(1, 2, figsize=(9,3))
+    fig.suptitle("Distribuição Acumulada da Confiança")
+    fig.supylabel("F(x)")
+    fig.tight_layout()
+
+    ax[0].plot(bins_count[1:], cdf, label="CDF")
+    ax[0].grid(linestyle='dotted')
+    ax[0].set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
+    ax[0].axvline(x=0.0045, color='red', linestyle='dotted', label="Limiar 75/25")
+    ax[0].axhline(y=0.25, color='red', linestyle='dotted')
+    ax[0].text(0.03, 0.625, 'Local', color='w', backgroundcolor='red')
+    ax[0].text(0.03, 0.125, 'Nuvem', color='w', backgroundcolor='red')
+    ax[0].set_xlabel('(a)')
+    ax[0].legend(loc='lower right')
+
+    ax[1].plot(bins_count[1:], cdf, label="CDF")
+    ax[1].grid(linestyle='dotted')
+    ax[1].set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
+    ax[1].axvline(x=0.0105, color='darkred', linestyle='dotted', label="Limiar 50/50")
+    ax[1].axhline(y=0.50, color='darkred', linestyle='dotted')
+    ax[1].text(0.03, 0.75, 'Local', color='w', backgroundcolor='darkred')
+    ax[1].text(0.03, 0.25, 'Nuvem', color='w', backgroundcolor='darkred')
+    ax[1].set_xlabel('(b)')
+    ax[1].legend(loc='lower right')
+
+    matplotlib.pyplot.savefig('out/validation_cdf.pdf')
     matplotlib.pyplot.show()
+
 
 # --------------------------------------------------------------------------------------------------
 
 def main():
-    # dataset = MNIST(flatten=True)
-    dataset = FashionMNIST(flatten=True)
-    # dataset = CIFAR10()
+    dataset = MNIST(flatten=True)
 
     model = EmbeddedNN(data_size=dataset.data_size, num_labels=dataset.num_labels)
     model.train(dataset.train_features, dataset.train_labels)
@@ -147,9 +165,9 @@ def main():
         evaluate(model, dataset.validation_features, dataset.validation_labels, -1)  # MNIST: 0.0104 - 95% | 0.071 - 90% | 0.0048 - 85%
     print(local_accuracy, local_inference_rate)
 
-    plot_confusion_matrix(predictions, dataset.validation_labels)
-    model.display_sample(2, 28, 28)
-    # plot_cdf(0.01)
+    #plot_confusion_matrix(predictions, dataset.validation_labels)
+    #model.display_sample(2, 28, 28)
+    plot_cdf()
 
 if __name__ == '__main__':
     main()

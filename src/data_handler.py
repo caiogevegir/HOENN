@@ -6,7 +6,7 @@ import os.path
 import serial
 import time
 
-from datasets import MNIST, FashionMNIST, CIFAR10
+from datasets import MNIST
 
 # --------------------------------------------------------------------------------------------------
 
@@ -35,8 +35,6 @@ def predict_on_board(board: serial.Serial, buffer: bytes):
 
 def main() -> None:
     dataset = MNIST(flatten=True)
-    # dataset = FashionMNIST(flatten=True)
-    # dataset = CIFAR10()
 
     offset = 0
     features = dataset.test_features[offset:]
