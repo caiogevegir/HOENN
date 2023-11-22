@@ -17,7 +17,7 @@ OUTPUT_PATH = os.path.join(ROOT_PATH, "out")
 
 CONFIDENCE_ARRAY = []
 
-matplotlib.pyplot.rcParams["font.size"] = 12
+matplotlib.pyplot.rcParams["font.size"] = 16
 matplotlib.pyplot.rcParams["font.family"] = "Times New Roman"
 
 # --------------------------------------------------------------------------------------------------
@@ -60,13 +60,18 @@ class EmbeddedNN:
         confidence = self.__get_confidence(response)
         return label, confidence
 
-    def display_sample(self, label, rows, columns):
-        if rows is not None and columns is not None:
-            sample = numpy.reshape(self.__model[label], (rows, columns))
-        else:
-            sample = self.__model[label]
-        matplotlib.pyplot.axis("off")
-        matplotlib.pyplot.imshow(sample, cmap='gray')
+    def display_sample(self):       
+        samples = [numpy.reshape(self.__model[label], (28, 28)) for label in range(10)]
+        fig, axs = matplotlib.pyplot.subplots(2, 5, figsize=(10, 4))
+
+        for s, sample in enumerate(samples):
+            l = s // 5
+            c = s % 5
+            axs[l][c].imshow(sample)
+            axs[l][c].axis('off')
+
+        matplotlib.pyplot.subplots_adjust(hspace=0.1, wspace=0.1)
+        matplotlib.pyplot.savefig('out/patterns.pdf')
         matplotlib.pyplot.show()
 
     def dumps(self, path):
@@ -115,6 +120,7 @@ def plot_confusion_matrix(true_labels, predicted_labels):
             matplotlib.pyplot.text(j, i, confusion_matrix_array[i][j], ha="center", va="center", color="w")
     matplotlib.pyplot.imshow(confusion_matrix_array)
     matplotlib.pyplot.colorbar()
+    matplotlib.pyplot.savefig('out/confusion_matrix.pdf')
     matplotlib.pyplot.show()
 
 def plot_cdf():
@@ -123,33 +129,35 @@ def plot_cdf():
     pdf = count / sum(count)
     cdf = numpy.cumsum(pdf)
 
-    fig, ax = matplotlib.pyplot.subplots(1, 2, figsize=(9,3))
-    fig.suptitle("Distribuição Acumulada da Confiança")
-    fig.supylabel("F(x)")
-    fig.tight_layout()
+    matplotlib.pyplot.figure(figsize=(6,4))
+    matplotlib.pyplot.plot(bins_count[1:], cdf, label="CDF")
+    matplotlib.pyplot.grid(linestyle='dotted')
+    matplotlib.pyplot.yticks([0.0, 0.25, 0.5, 0.75, 1.0])
+    matplotlib.pyplot.axvline(x=0.0045, color='red', linestyle='dotted', label="Limiar 75/25")
+    matplotlib.pyplot.axhline(y=0.25, color='red', linestyle='dotted')
+    matplotlib.pyplot.text(0.03, 0.625, 'Local', color='w', backgroundcolor='red')
+    matplotlib.pyplot.text(0.03, 0.125, 'Nuvem', color='w', backgroundcolor='red')
+    matplotlib.pyplot.legend(loc='lower right')
 
-    ax[0].plot(bins_count[1:], cdf, label="CDF")
-    ax[0].grid(linestyle='dotted')
-    ax[0].set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
-    ax[0].axvline(x=0.0045, color='red', linestyle='dotted', label="Limiar 75/25")
-    ax[0].axhline(y=0.25, color='red', linestyle='dotted')
-    ax[0].text(0.03, 0.625, 'Local', color='w', backgroundcolor='red')
-    ax[0].text(0.03, 0.125, 'Nuvem', color='w', backgroundcolor='red')
-    ax[0].set_xlabel('(a)')
-    ax[0].legend(loc='lower right')
-
-    ax[1].plot(bins_count[1:], cdf, label="CDF")
-    ax[1].grid(linestyle='dotted')
-    ax[1].set_yticks([0.0, 0.25, 0.5, 0.75, 1.0])
-    ax[1].axvline(x=0.0105, color='darkred', linestyle='dotted', label="Limiar 50/50")
-    ax[1].axhline(y=0.50, color='darkred', linestyle='dotted')
-    ax[1].text(0.03, 0.75, 'Local', color='w', backgroundcolor='darkred')
-    ax[1].text(0.03, 0.25, 'Nuvem', color='w', backgroundcolor='darkred')
-    ax[1].set_xlabel('(b)')
-    ax[1].legend(loc='lower right')
-
-    matplotlib.pyplot.savefig('out/validation_cdf.pdf')
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig('out/validation_cdf_7525.pdf')
     matplotlib.pyplot.show()
+    matplotlib.pyplot.close()
+
+    matplotlib.pyplot.figure(figsize=(6,4))
+    matplotlib.pyplot.plot(bins_count[1:], cdf, label="CDF")
+    matplotlib.pyplot.grid(linestyle='dotted')
+    matplotlib.pyplot.yticks([0.0, 0.25, 0.5, 0.75, 1.0])
+    matplotlib.pyplot.axvline(x=0.0105, color='darkred', linestyle='dotted', label="Limiar 50/50")
+    matplotlib.pyplot.axhline(y=0.50, color='darkred', linestyle='dotted')
+    matplotlib.pyplot.text(0.03, 0.75, 'Local', color='w', backgroundcolor='darkred')
+    matplotlib.pyplot.text(0.03, 0.25, 'Nuvem', color='w', backgroundcolor='darkred')
+    matplotlib.pyplot.legend(loc='lower right')
+
+    matplotlib.pyplot.tight_layout()
+    matplotlib.pyplot.savefig('out/validation_cdf_5050.pdf')
+    matplotlib.pyplot.show()
+    matplotlib.pyplot.close()
 
 
 # --------------------------------------------------------------------------------------------------
@@ -166,8 +174,8 @@ def main():
     print(local_accuracy, local_inference_rate)
 
     #plot_confusion_matrix(predictions, dataset.validation_labels)
-    #model.display_sample(2, 28, 28)
-    plot_cdf()
+    #model.display_sample()
+    #plot_cdf()
 
 if __name__ == '__main__':
     main()
