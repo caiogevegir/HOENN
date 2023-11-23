@@ -1,3 +1,3 @@
-# EmbeddedNN
+# HOENN
 
 TBD
